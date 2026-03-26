@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forest: #1C3A1C;
+  --sage:   #A8C97A;
+  --cream:  #F4F0E6;
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--forest);
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-forest text-cream px-6 py-3 text-sm font-body tracking-widest uppercase hover:bg-bark transition-colors duration-200;
+  }
+  .btn-sage {
+    @apply bg-sage text-forest px-6 py-3 text-sm font-body tracking-widest uppercase hover:opacity-90 transition-opacity duration-200;
+  }
+  .btn-outline {
+    @apply border border-forest text-forest px-6 py-3 text-sm font-body tracking-widest uppercase hover:bg-forest hover:text-cream transition-colors duration-200;
+  }
+  .input-field {
+    @apply w-full bg-white border border-moss/30 px-4 py-3 text-sm font-body text-forest placeholder-mist focus:outline-none focus:border-forest transition-colors duration-200;
+  }
+  .label {
+    @apply block text-xs font-body tracking-widest uppercase text-moss mb-1.5;
+  }
+  .card {
+    @apply bg-white border border-moss/20 p-6;
+  }
+}
