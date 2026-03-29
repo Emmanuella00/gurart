@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/layout/Navbar'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Home() {
+  const { user } = useAuth()
   const [heroArtworks, setHeroArtworks] = useState([])
 
   useEffect(() => {
@@ -107,10 +109,12 @@ export default function Home() {
             </p>
             <div className="flex gap-4">
               <Link href="/browse" className="btn-sage">Explore artworks</Link>
-              <Link href="/auth/register" className="btn-outline border-moss text-mist hover:border-cream hover:text-cream">
-                Join as artist
-              </Link>
-            </div>
+              {!user && (
+                <Link href="/auth/register" className="btn-outline border-moss text-mist hover:border-cream hover:text-cream">
+                  Join as artist
+                </Link>
+              )}
+           </div>
           </div>
 
           {/* Right — orbiting art tiles */}
