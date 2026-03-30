@@ -90,7 +90,7 @@ export default function About() {
         <div className="max-w-3xl mx-auto text-center">
           <p className="font-body text-xs tracking-widest uppercase text-sage mb-5 md:mb-6">Our mission</p>
           <p className="font-sans text-xl md:text-3xl text-cream leading-relaxed">
-            "To empower local artists — especially women — by transforming African art from a passion into a sustainable source of income through innovation, storytelling, and guided digital commerce."
+            "To empower local artists  by transforming African art from a passion into a sustainable source of income through innovation, storytelling, and guided digital commerce."
           </p>
         </div>
       </section>
