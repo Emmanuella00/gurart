@@ -11,6 +11,7 @@ export default function AdminPanel() {
   const [actionLoading, setActionLoading] = useState(false)
   const [filter, setFilter] = useState('pending')
   const [toast, setToast] = useState(null)
+  const [showDetail, setShowDetail] = useState(false)
 
   useEffect(() => { checkAdmin() }, [])
 
@@ -24,10 +25,7 @@ export default function AdminPanel() {
 
   async function loadArtworks() {
     setLoading(true)
-    let query = supabase
-      .from('artworks')
-      .select('*, artists(id, location, specialty, is_verified, profiles(full_name, avatar_url, email))')
-      .order('created_at', { ascending: false })
+    let query = supabase.from('artworks').select('*, artists(id, location, specialty, is_verified, profiles(full_name, avatar_url, email))').order('created_at', { ascending: false })
     if (filter === 'pending') query = query.eq('is_approved', false)
     if (filter === 'approved') query = query.eq('is_approved', true)
     const { data } = await query
@@ -45,7 +43,7 @@ export default function AdminPanel() {
   async function handleApprove(artwork) {
     setActionLoading(true)
     const { error } = await supabase.from('artworks').update({ is_approved: true }).eq('id', artwork.id)
-    if (!error) { showToast(`"${artwork.title}" approved and now live`); loadArtworks(); setSelected(null) }
+    if (!error) { showToast(`"${artwork.title}" approved`); loadArtworks(); setSelected(null); setShowDetail(false) }
     else showToast('Failed to approve', 'error')
     setActionLoading(false)
   }
@@ -53,7 +51,7 @@ export default function AdminPanel() {
   async function handleReject(artwork) {
     setActionLoading(true)
     const { error } = await supabase.from('artworks').delete().eq('id', artwork.id)
-    if (!error) { showToast(`"${artwork.title}" rejected and removed`); loadArtworks(); setSelected(null) }
+    if (!error) { showToast(`"${artwork.title}" rejected`); loadArtworks(); setSelected(null); setShowDetail(false) }
     else showToast('Failed to reject', 'error')
     setActionLoading(false)
   }
@@ -66,6 +64,11 @@ export default function AdminPanel() {
     setActionLoading(false)
   }
 
+  function selectArtwork(artwork) {
+    setSelected(artwork)
+    setShowDetail(true)
+  }
+
   return (
     <div className="min-h-screen bg-cream">
       <Navbar />
@@ -74,9 +77,11 @@ export default function AdminPanel() {
           {toast.msg}
         </div>
       )}
-      <div className="flex h-[calc(100vh-60px)]">
-        {/* Sidebar */}
-        <div className="w-80 flex-shrink-0 border-r border-moss/20 bg-white flex flex-col">
+
+      <div className="flex flex-col md:flex-row" style={{ minHeight: 'calc(100vh - 60px)' }}>
+
+        {/* Sidebar — full width on mobile when detail not shown */}
+        <div className={`${showDetail ? 'hidden md:flex' : 'flex'} md:w-80 flex-shrink-0 border-r border-moss/20 bg-white flex-col`}>
           <div className="p-4 border-b border-moss/20">
             <h2 className="font-sans text-xl text-forest mb-3">Admin panel</h2>
             <div className="flex gap-1">
@@ -94,7 +99,7 @@ export default function AdminPanel() {
             ) : artworks.length === 0 ? (
               <div className="p-6 text-center"><p className="font-body text-sm text-mist">No {filter} artworks</p></div>
             ) : artworks.map(artwork => (
-              <button key={artwork.id} onClick={() => setSelected(artwork)}
+              <button key={artwork.id} onClick={() => selectArtwork(artwork)}
                 className={`w-full text-left p-3 border-b border-moss/10 flex gap-3 items-center hover:bg-cream transition-colors ${selected?.id === artwork.id ? 'bg-cream border-l-2 border-l-forest' : ''}`}>
                 <div className="w-12 h-12 flex-shrink-0 bg-bark/10 overflow-hidden">
                   {artwork.image_url ? <img src={artwork.image_url} alt={artwork.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><span className="font-body text-xs text-mist">?</span></div>}
@@ -112,31 +117,35 @@ export default function AdminPanel() {
         </div>
 
         {/* Detail panel */}
-        <div className="flex-1 overflow-y-auto">
+        <div className={`${showDetail ? 'block' : 'hidden md:block'} flex-1 overflow-y-auto`}>
           {!selected ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full py-20">
               <p className="font-body text-sm text-mist">Select an artwork to review</p>
             </div>
           ) : (
-            <div className="p-8 max-w-2xl">
-              <div className="flex items-start justify-between mb-6">
+            <div className="p-6 md:p-8 max-w-2xl">
+              {/* Mobile back button */}
+              <button onClick={() => setShowDetail(false)} className="md:hidden font-body text-xs text-mist hover:text-forest mb-4 flex items-center gap-1">
+                ← Back to list
+              </button>
+
+              <div className="flex items-start justify-between mb-5 md:mb-6">
                 <div>
                   <p className="font-body text-xs text-mist tracking-widest uppercase mb-1 capitalize">{selected.category}</p>
-                  <h1 className="font-sans text-3xl text-forest">{selected.title}</h1>
+                  <h1 className="font-sans text-2xl md:text-3xl text-forest">{selected.title}</h1>
                 </div>
-                <span className={`font-body text-xs px-2 py-1 ${selected.is_approved ? 'bg-sage/20 text-forest' : 'bg-amber-100 text-amber-700'}`}>
-                  {selected.is_approved ? 'Approved' : 'Pending review'}
+                <span className={`font-body text-xs px-2 py-1 flex-shrink-0 ml-2 ${selected.is_approved ? 'bg-sage/20 text-forest' : 'bg-amber-100 text-amber-700'}`}>
+                  {selected.is_approved ? 'Approved' : 'Pending'}
                 </span>
               </div>
 
-              <div className="aspect-video bg-bark/10 border border-moss/20 overflow-hidden mb-6">
+              <div className="aspect-video bg-bark/10 border border-moss/20 overflow-hidden mb-5 md:mb-6">
                 {selected.image_url
                   ? <img src={selected.image_url} alt={selected.title} className="w-full h-full object-contain" />
                   : <div className="w-full h-full flex items-center justify-center"><span className="font-body text-sm text-mist">No image</span></div>}
               </div>
 
-              {/* Artist card */}
-              <div className="bg-white border border-moss/20 p-4 mb-5">
+              <div className="bg-white border border-moss/20 p-4 mb-4 md:mb-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-bark/10 flex items-center justify-center overflow-hidden">
@@ -146,17 +155,16 @@ export default function AdminPanel() {
                     </div>
                     <div>
                       <p className="font-body text-sm font-medium text-forest">{selected.artists?.profiles?.full_name}</p>
-                      <p className="font-body text-xs text-mist">{selected.artists?.profiles?.email} · {selected.artists?.location}</p>
+                      <p className="font-body text-xs text-mist">{selected.artists?.location}</p>
                     </div>
                   </div>
                   {!selected.artists?.is_verified
-                    ? <button onClick={() => handleVerifyArtist(selected.artists?.id)} disabled={actionLoading} className="font-body text-xs border border-forest text-forest px-3 py-1.5 hover:bg-forest hover:text-cream transition-colors">Verify artist</button>
+                    ? <button onClick={() => handleVerifyArtist(selected.artists?.id)} disabled={actionLoading} className="font-body text-xs border border-forest text-forest px-3 py-1.5 hover:bg-forest hover:text-cream transition-colors">Verify</button>
                     : <span className="font-body text-xs bg-sage/20 text-forest px-2 py-1">Verified</span>}
                 </div>
               </div>
 
-              {/* Meta grid */}
-              <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="grid grid-cols-2 gap-3 mb-4 md:mb-5">
                 {[
                   { label: 'Price', value: `RWF ${selected.price?.toLocaleString()}` },
                   { label: 'Category', value: selected.category },
@@ -171,39 +179,28 @@ export default function AdminPanel() {
               </div>
 
               {selected.description && (
-                <div className="mb-5">
+                <div className="mb-4 md:mb-5">
                   <p className="font-body text-xs text-mist tracking-widest uppercase mb-2">Description</p>
                   <p className="font-body text-sm text-moss leading-relaxed">{selected.description}</p>
                 </div>
               )}
 
               {selected.story && (
-                <div className="bg-forest text-cream p-5 mb-6">
+                <div className="bg-forest text-cream p-4 md:p-5 mb-5 md:mb-6">
                   <p className="font-body text-xs tracking-widest uppercase text-sage mb-2">Cultural story</p>
                   <p className="font-body text-sm text-mist leading-relaxed italic">"{selected.story}"</p>
                 </div>
               )}
 
-              {/* Actions */}
               {!selected.is_approved ? (
-                <div className="flex gap-3">
-                  <button onClick={() => handleReject(selected)} disabled={actionLoading}
-                    className="btn-outline flex-1 text-center border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600">
-                    Reject & remove
-                  </button>
-                  <button onClick={() => handleApprove(selected)} disabled={actionLoading} className="btn-sage flex-1 text-center">
-                    {actionLoading ? 'Processing...' : 'Approve & publish →'}
-                  </button>
+                <div className="flex flex-col md:flex-row gap-3">
+                  <button onClick={() => handleReject(selected)} disabled={actionLoading} className="btn-outline flex-1 text-center border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600">Reject & remove</button>
+                  <button onClick={() => handleApprove(selected)} disabled={actionLoading} className="btn-sage flex-1 text-center">{actionLoading ? 'Processing...' : 'Approve & publish →'}</button>
                 </div>
               ) : (
-                <div className="flex gap-3">
-                  <div className="bg-sage/10 border border-sage/30 px-4 py-3 flex-1 text-center">
-                    <p className="font-body text-sm text-forest">This artwork is live on the platform</p>
-                  </div>
-                  <button onClick={() => handleReject(selected)} disabled={actionLoading}
-                    className="btn-outline border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600">
-                    Remove
-                  </button>
+                <div className="flex flex-col md:flex-row gap-3">
+                  <div className="bg-sage/10 border border-sage/30 px-4 py-3 flex-1 text-center"><p className="font-body text-sm text-forest">This artwork is live</p></div>
+                  <button onClick={() => handleReject(selected)} disabled={actionLoading} className="btn-outline border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600">Remove</button>
                 </div>
               )}
             </div>
