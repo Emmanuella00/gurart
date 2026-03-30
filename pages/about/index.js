@@ -142,7 +142,7 @@ export default function About() {
             </div>
             <div>
               <h3 className="font-sans text-lg md:text-xl text-forest mb-1">Emmanuella Ikirezi</h3>
-              <p className="font-body text-xs text-mist tracking-widest uppercase mb-3">Founder · African Leadership University</p>
+              <p className="font-body text-xs text-mist tracking-widest uppercase mb-3">Founder · </p>
               <p className="font-body text-sm text-moss leading-relaxed">
                 GURArt was founded with the belief that African creativity deserves a global stage — and that technology can be the bridge. Built at African Leadership University, Kigali, this platform is as much about economic justice as it is about beautiful art.
               </p>
